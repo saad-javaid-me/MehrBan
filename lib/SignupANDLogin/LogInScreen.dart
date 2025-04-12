@@ -1,5 +1,7 @@
 import 'package:donation_app/Admin/AdminHomeScreen.dart';
 import 'package:donation_app/Custom/customtextfeild.dart';
+import 'package:donation_app/Dashboards/DonationListScreen.dart';
+import 'package:donation_app/Dashboards/donorDashboard.dart';
 import 'package:donation_app/SignupANDLogin/ForgetScreen.dart';
 import 'package:donation_app/SignupANDLogin/SignUpScreen.dart';
 import 'package:donation_app/colors/colors.dart';
@@ -55,11 +57,11 @@ class _LogInScreenState extends State<LogInScreen> {
           if (role == 'Admin') {
             Navigator.push(context, MaterialPageRoute(builder: (context)=> AdminHomeScreen()));
           } else if (role == 'User') {
-            // Navigator.pushReplacementNamed(context, '/userDashboard');
+             Navigator.push(context, MaterialPageRoute(builder: (context)=> DonationListScreen()));
           } else if (role == 'Donor') {
-            // Navigator.pushReplacementNamed(context, '/donorDashboard');
+             Navigator.push(context, MaterialPageRoute(builder: (context)=> donorDashboard()));
           } else if (role == 'NGO') {
-            // Navigator.pushReplacementNamed(context, '/ngoDashboard');
+            Navigator.push(context, MaterialPageRoute(builder: (context)=> DonationListScreen()));
           } else {
             // Default to user dashboard if the role is unrecognized
             // Navigator.pushReplacementNamed(context, '/userDashboard');

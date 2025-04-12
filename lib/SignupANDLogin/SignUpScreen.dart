@@ -100,34 +100,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Future<void> _signUpUser(BuildContext context) async {
-    // Validate all form fields
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  Future<bool> _signUpUser(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return false;
 
-    // Validate role selection
     if (_selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select a role")),
       );
-      return;
+      return false;
     }
 
-    // Validate NGO image
     if (_selectedRole == 'NGO' && _ngoImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please upload NGO certificate image")),
       );
-      return;
+      return false;
     }
 
-    // Validate terms checkbox
     if (!_termsAccepted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please accept the terms and conditions")),
       );
-      return;
+      return false;
     }
 
     setState(() => _isLoading = true);
@@ -148,7 +142,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         body: jsonEncode(body),
       );
 
-      if (!mounted) return;
+      if (!mounted) return false;
 
       final responseData = jsonDecode(response.body);
 
@@ -156,20 +150,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(responseData['message'])),
         );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LogInScreen()),
-        );
+        return true; // ✅ Sign-up successful
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(responseData['message'] ?? 'Registration failed')),
         );
+        return false;
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("An error occurred: ${e.toString()}")),
       );
+      return false;
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -272,9 +264,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
             if (value == null || value.isEmpty) {
               return 'Email is required';
             }
-            if (!RegExp(r'^[a-zA-Z0-9]{5,}@gmail\.com$').hasMatch(value)) {
+            if (!RegExp(r'^[a-zA-Z0-9]{5,}@(gmail|yahoo|hotmail)\.com$').hasMatch(value)) {
               return 'Please enter a valid email address';
             }
+
             return null;
           },
         ),
@@ -467,8 +460,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: SizedBox(
         width: width,
         height: height,
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : () => _signUpUser(context),
+        child:ElevatedButton(
+          onPressed: _isLoading
+              ? null
+              : () async {
+            setState(() => _isLoading = true);
+
+            bool success = await _signUpUser(context); // Now it returns a boolean
+
+            setState(() => _isLoading = false);
+
+            if (success) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LogInScreen()),
+              );
+            }
+          },
           style: ElevatedButton.styleFrom(
             side: const BorderSide(width: 1, color: FColors.barPurple),
             elevation: 10,
