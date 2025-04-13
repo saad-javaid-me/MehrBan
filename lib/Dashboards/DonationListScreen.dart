@@ -1,31 +1,53 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:donation_app/Dashboards/DonationDetailsScreen.dart';
 import 'package:donation_app/Models/DonationItem.dart';
 import 'package:flutter/material.dart';
 
-class DonationListScreen extends StatelessWidget {
-  final List<DonationItem> donations = [
-    DonationItem(
-      imageUrl: 'assets/images/donationbg.png',
-      name: 'Winter Jacket',
-      description: 'A warm jacket for winter.',
-      category: 'Clothing',
-      location: 'Karachi',
-    ),
-    DonationItem(
-      imageUrl: 'assets/images/donationbg.png',
-      name: 'School Bag',
-      description: 'A school bag with books and stationery.',
-      category: 'Education',
-      location: 'Multan',
-    ),
-    DonationItem(
-      imageUrl: 'assets/images/donationbg.png',
-      name: 'Canned Food',
-      description: 'Pack of canned food items.',
-      category: 'Food',
-      location: 'Lahore',
-    ),
-  ];
+class DonationListScreen extends StatefulWidget {
+  @override
+  _DonationListScreenState createState() => _DonationListScreenState();
+}
+
+class _DonationListScreenState extends State<DonationListScreen> {
+  List<DonationItem> _donations = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDonations();
+  }
+
+  Future<void> _fetchDonations() async {
+    final url = Uri.parse('https://donor-app-backend.vercel.app/api/donation/donations');
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData['success'] == true) {
+          final List<dynamic> donationsJson = responseData['donations'];
+          setState(() {
+            _donations = donationsJson.map((json) => DonationItem.fromJson(json)).toList();
+            _isLoading = false;
+          });
+        } else {
+          throw Exception('Failed to load donations');
+        }
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error loading donations: ${e.toString()}")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +55,7 @@ class DonationListScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         automaticallyImplyLeading: false,
-        title: Text('Donations', style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white)),
+        title: Text('Donations', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -44,12 +66,16 @@ class DonationListScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Padding(
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _donations.isEmpty
+          ? Center(child: Text('No donations available.'))
+          : Padding(
         padding: const EdgeInsets.all(10.0),
         child: ListView.builder(
-          itemCount: donations.length,
+          itemCount: _donations.length,
           itemBuilder: (context, index) {
-            final item = donations[index];
+            final item = _donations[index];
             return GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -71,11 +97,17 @@ class DonationListScreen extends StatelessWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(
+                        child: Image.network(
                           item.imageUrl,
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Image.asset(
+                            'assets/images/donationbg.png',
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       SizedBox(width: 15),
