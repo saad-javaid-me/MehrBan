@@ -45,29 +45,53 @@ class _LogInScreenState extends State<LogInScreen> {
         final responseData = jsonDecode(response.body);
 
         if (response.statusCode == 200 && responseData['success'] == true) {
-          // Successful login
+          final user = responseData['user'];
+
+          if (user == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Login successful but user data is missing.")),
+            );
+            return;
+          }
+
+          final String? role = user['role'];
+          final String? status = user['status'];
+
+          if (role == null || status == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Login failed: Missing role or status.")),
+            );
+            return;
+          }
+
+          // Check approval for Donor, NGO, and User roles
+          if ((role == 'Donor' || role == 'NGO' || role == 'User') && status != 'approved') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Your account is not yet approved by the admin.")),
+            );
+            return;
+          }
+
+          // Success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(responseData['message'])),
           );
 
-          // Get the user role
-          String role = responseData['user']['role'];
-
-          // Navigate to different dashboards based on the role
+          // Navigate by role
           if (role == 'Admin') {
-            Navigator.push(context, MaterialPageRoute(builder: (context)=> AdminHomeScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHomeScreen()));
           } else if (role == 'User') {
-             Navigator.push(context, MaterialPageRoute(builder: (context)=> DonationListScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
           } else if (role == 'Donor') {
-             Navigator.push(context, MaterialPageRoute(builder: (context)=> donorDashboard()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => donorDashboard()));
           } else if (role == 'NGO') {
-            Navigator.push(context, MaterialPageRoute(builder: (context)=> DonationListScreen()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
           } else {
-            // Default to user dashboard if the role is unrecognized
-            // Navigator.pushReplacementNamed(context, '/userDashboard');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Unrecognized user role.")),
+            );
           }
         } else {
-          // Login failed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(responseData['message'] ?? 'Login failed')),
           );

@@ -1,11 +1,11 @@
 class UserModel {
   final String id;
-  final String name;
-  final String email;
-  final String role;
-  final DateTime registrationDate;
-   bool isApproved;
-  final String imageUrl;
+  late final String name;
+  late final String email;
+  late final String role;
+  late final DateTime registrationDate;
+  bool isApproved;
+  late final String imageUrl;
 
   UserModel({
     required this.id,
@@ -19,22 +19,33 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['_id'],
-      name: json['username'],
-      email: json['email'],
-      role: json['role'],
-      registrationDate: DateTime.parse(json['createdAt']),
-      isApproved: json['status'] == 'approved',
-      imageUrl: '', // Add image URL if available
+      id: json['_id'] ?? '',
+      name: json['username'] ?? 'Unknown',
+      email: json['email'] ?? '',
+      role: json['role'] ?? 'User',
+      registrationDate: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      isApproved: (json['status'] ?? '').toString().toLowerCase() == 'approved',
+      imageUrl: json['imageUrl'] ?? '',
     );
   }
 
-  // You can also add a method to update approval status
+  // Method to approve the user
   void approve() {
     isApproved = true;
   }
 
+  // Method to reject the user
   void reject() {
     isApproved = false;
+  }
+
+  // Method to update user info with new data
+  void updateUser(UserModel newUser) {
+    name = newUser.name;
+    email = newUser.email;
+    role = newUser.role;
+    registrationDate = newUser.registrationDate;
+    isApproved = newUser.isApproved;
+    imageUrl = newUser.imageUrl;
   }
 }

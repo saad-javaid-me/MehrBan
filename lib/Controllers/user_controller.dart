@@ -57,27 +57,20 @@ class UserController extends GetxController {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final users = data['users'] as List;
 
-        _users.clear();
-        for (var userData in users) {
-          UserModel user = UserModel(
-            id: userData['_id'],
-            name: userData['username'],
-            email: userData['email'],
-            role: userData['role'],
-            registrationDate: DateTime.parse(userData['createdAt']),
-            isApproved: userData['status'] == 'approved',
-            imageUrl: '', // You can add an image URL if available in the response
-          );
-          _users.add(user);
+        if (data is Map<String, dynamic>) {
+          final usersData = data['users'] as List;
+
+          _users.clear();
+          for (var userData in usersData) {
+            UserModel user = UserModel.fromJson(userData);
+            _users.add(user);
+          }
         }
       } else {
-        // Handle the error if the request fails
         print('Failed to load users');
       }
     } catch (e) {
-      // Handle exceptions such as no internet or JSON parse errors
       print('Error fetching users: $e');
     } finally {
       isLoading(false);
@@ -85,7 +78,7 @@ class UserController extends GetxController {
   }
 
   Future<void> refreshData() async {
-    await fetchUsers();  // This will fetch fresh data
+    await fetchUsers();  // Fetch fresh data from the API
   }
 
   void addUser(UserModel user) {
@@ -93,31 +86,66 @@ class UserController extends GetxController {
     _users.sort((a, b) => b.registrationDate.compareTo(a.registrationDate));
   }
 
-  // Approve a user locally (change isApproved to true)
-  void approveUser(String id) {
-    final index = _users.indexWhere((u) => u.id == id);
-    if (index != -1) {
-      _users[index].approve();  // Using the approve method
-      _users.refresh();
+  // Approve a user on the backend and locally
+  Future<void> approveUser(String id) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('https://donor-app-backend.vercel.app/api/auth/user-status/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'status': 'approved',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final user = _users.firstWhere((u) => u.id == id);
+        user.approve();
+        _users.refresh();
+      } else {
+        print('Failed to approve user: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error approving user: $e');
     }
   }
 
-  // Reject a user locally (remove from the list)
-  void rejectUser(String id) {
-    _users.removeWhere((u) => u.id == id);
+  // Reject a user on the backend and locally
+  Future<void> rejectUser(String id) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('https://donor-app-backend.vercel.app/api/auth/user-status/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'status': 'rejected',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        _users.removeWhere((u) => u.id == id);
+        _users.refresh();
+      } else {
+        print('Failed to reject user: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error rejecting user: $e');
+    }
   }
 
   // ----- Approve All Users -----
-  void approveAllUsers() {
+  Future<void> approveAllUsers() async {
     for (var user in _users) {
-      user.approve();  // Approve each user
+      await approveUser(user.id);  // Approve each user
     }
     _users.refresh();
   }
 
   // ----- Reject All Users -----
-  void rejectAllUsers() {
-    _users.clear();  // Reject all users by clearing the list
+  Future<void> rejectAllUsers() async {
+    for (var user in _users) {
+      await rejectUser(user.id);  // Reject each user
+    }
+    _users.clear();
+    _users.refresh();
   }
 
   // ----- Helper -----
@@ -127,7 +155,6 @@ class UserController extends GetxController {
     return list;
   }
 
-  // ----- Dummy Data Init -----
   @override
   void onInit() {
     super.onInit();
