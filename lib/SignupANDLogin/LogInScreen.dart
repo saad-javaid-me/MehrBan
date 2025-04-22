@@ -79,13 +79,14 @@ class _LogInScreenState extends State<LogInScreen> {
 
           // Navigate by role
           if (role == 'Admin') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => AdminHomeScreen()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminHomeScreen()));
           } else if (role == 'User') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
           } else if (role == 'Donor') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => donorDashboard()));
+            final String donorId = user['id'];
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => donorDashboard(donorId: donorId,)));
           } else if (role == 'NGO') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Unrecognized user role.")),

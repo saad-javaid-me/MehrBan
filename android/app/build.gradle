@@ -37,6 +37,10 @@ android {
             signingConfig = signingConfigs.debug
             minifyEnabled false // just for now to confirm it's ProGuard
             shrinkResources false
+            proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+            )
         }
     }
 }

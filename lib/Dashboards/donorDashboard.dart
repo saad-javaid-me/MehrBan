@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class donorDashboard extends StatefulWidget {
+  final String donorId;
+
+  donorDashboard({Key? key, required this.donorId}) : super(key: key);
   @override
   _donorDashboardState createState() => _donorDashboardState();
 }
@@ -17,7 +20,7 @@ class _donorDashboardState extends State<donorDashboard> {
   final TextEditingController _LocationController = TextEditingController();
   String _selectedCategory = 'Clothing';
   final List<String> _categories = ['Clothing', 'Electronics', 'Furniture', 'Books', 'Others'];
-  final String donorId = '67efabadabd4ae7b15a101ff'; // Static for now
+
 
   Future<void> _pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -34,13 +37,15 @@ class _donorDashboardState extends State<donorDashboard> {
     String imageUrl = "https://picsum.photos/seed/donation/400/300"; // Demo image URL
 
     final Map<String, dynamic> donationData = {
-      "donorId": donorId,
+      "donorId": widget.donorId,
       "image": imageUrl,
       "name": _nameController.text.trim(),
       "description": _descriptionController.text.trim(),
       "address": _LocationController.text.trim(),
       "category": _selectedCategory,
     };
+
+    print("📦 Sending donation data: ${json.encode(donationData)}");
 
     try {
       final response = await http.post(
@@ -49,9 +54,11 @@ class _donorDashboardState extends State<donorDashboard> {
         body: json.encode(donationData),
       );
 
+      print("📡 Status Code: ${response.statusCode}");
+      print("📥 Response Body: ${response.body}");
+
       final responseBody = json.decode(response.body);
 
-      // Check for status code 201 and success flag
       if ((response.statusCode == 200 || response.statusCode == 201) && responseBody['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("✅ Donation posted successfully")),
@@ -63,7 +70,7 @@ class _donorDashboardState extends State<donorDashboard> {
         );
       }
     } catch (e) {
-      print("Error: $e");
+      print("🚨 Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("⚠️ Something went wrong")),
       );
@@ -94,24 +101,7 @@ class _donorDashboardState extends State<donorDashboard> {
           padding: EdgeInsets.all(16.0),
           child: Column(
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: _image == null
-                      ? Icon(Icons.camera_alt, size: 50, color: Colors.grey[700])
-                      : ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.file(_image!, fit: BoxFit.cover),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
+              SizedBox(height: 50),
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(

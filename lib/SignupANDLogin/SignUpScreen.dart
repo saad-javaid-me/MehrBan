@@ -110,12 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return false;
     }
 
-    if (_selectedRole == 'NGO' && _ngoImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please upload NGO certificate image")),
-      );
-      return false;
-    }
+  
 
     if (!_termsAccepted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -218,7 +213,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 _buildFormFields(context),
                 const SizedBox(height: 15),
                 _buildRoleDropdown(context),
-                if (_selectedRole == 'NGO') _buildImageUploadSection(context),
                 _buildLoginLink(context),
                 _buildTermsCheckbox(context),
                 const SizedBox(height: 15),
@@ -340,72 +334,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildImageUploadSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 15),
-        const Text(
-          "Upload NGO Certificate Image",
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.black,
-            fontFamily: "poppins",
-          ),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () async => await _pickImage(context),
-          child: Container(
-            width: double.infinity,
-            height: 150,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: _selectedRole == 'NGO' && _ngoImage == null
-                    ? Colors.red
-                    : Colors.grey,
-                style: BorderStyle.solid,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: _ngoImage == null
-                ? const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                SizedBox(height: 8),
-                Text(
-                  "Tap to add image",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
-            )
-                : ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.file(
-                _ngoImage!,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-          ),
-        ),
-        if (_selectedRole == 'NGO' && _ngoImage == null)
-          const Padding(
-            padding: EdgeInsets.only(top: 4.0),
-            child: Text(
-              "NGO certificate image is required",
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 12,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
 
   Widget _buildLoginLink(BuildContext context) {
     return Row(
