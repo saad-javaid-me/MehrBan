@@ -274,7 +274,7 @@ class UserCard extends StatelessWidget {
               _buildDetailRow('Email', user.email),
               _buildDetailRow('Role', user.role),
               _buildDetailRow(
-                'Registration Date',
+                'Date',
                 _dateFormat.format(user.registrationDate),
               ),
               _buildDetailRow(

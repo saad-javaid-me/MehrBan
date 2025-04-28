@@ -29,6 +29,22 @@ class _LogInScreenState extends State<LogInScreen> {
       });
 
       try {
+        // Check if Admin login
+        if (_emailController.text.trim() == "Admin@gmail.com" &&
+            _passwordController.text == "admin123") {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Admin login successful")),
+          );
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminHomeScreen()),
+          );
+
+          return; // Important: stop further execution
+        }
+
+        // Otherwise, normal API login
         final url = Uri.parse('https://donor-app-backend.vercel.app/api/auth/signin');
 
         final response = await http.post(
@@ -64,7 +80,6 @@ class _LogInScreenState extends State<LogInScreen> {
             return;
           }
 
-          // Check approval for Donor, NGO, and User roles
           if ((role == 'Donor' || role == 'NGO' || role == 'User') && status != 'approved') {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Your account is not yet approved by the admin.")),
@@ -72,19 +87,17 @@ class _LogInScreenState extends State<LogInScreen> {
             return;
           }
 
-          // Success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(responseData['message'])),
           );
 
-          // Navigate by role
           if (role == 'Admin') {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminHomeScreen()));
           } else if (role == 'User') {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
           } else if (role == 'Donor') {
             final String donorId = user['id'];
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => donorDashboard(donorId: donorId,)));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => donorDashboard(donorId: donorId)));
           } else if (role == 'NGO') {
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DonationListScreen()));
           } else {
@@ -231,12 +244,21 @@ class _LogInScreenState extends State<LogInScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account?",
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.black54,
+                          fontFamily: "poppins",
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        child: const Text(
+                          "Sign Up",
                           style: TextStyle(
                             fontSize: 15,
                             color: Colors.black54,
@@ -244,27 +266,16 @@ class _LogInScreenState extends State<LogInScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        TextButton(
-                          child: const Text(
-                            "Sign Up",
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.black54,
-                              fontFamily: "poppins",
-                              fontWeight: FontWeight.bold,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignUpScreen(),
                             ),
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SignUpScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
